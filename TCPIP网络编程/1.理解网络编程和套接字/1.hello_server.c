@@ -1,3 +1,4 @@
+//时间：2020年8月26日 14:08:33
 //编写“Hello world!”服务器端
 
 #include <stdio.h>
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	serv_sock = socket(PF_INET, SOCK_STREAM, 0);
+	serv_sock = socket(PF_INET, SOCK_STREAM, 0);    //IPv4协议族中面向连接的套接字，目前只有IPPROTO_TCP,所以可以填0（或者IPPROTO_TCP）
 	if (serv_sock == -1)
 		error_handling("socket() error");
 
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
 
 void error_handling(char *message)
 {
-	fputs(message, stderr);
-	fputc("\n", stderr);
+	fputs(message, stderr);       //puts() 只能向标准输出流输出，而 fputs() 可以向任何流输出。
+	fputc("\n", stderr);          //使用 puts() 时，系统会在自动在其后添加换行符；而使用 fputs() 时，系统不会自动添加换行符。
 	exit(1);
 }
