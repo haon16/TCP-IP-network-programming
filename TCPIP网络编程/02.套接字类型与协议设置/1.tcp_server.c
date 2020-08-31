@@ -12,25 +12,17 @@ void error_handling(char *message);
 
 int main(int argc, char *argv[])
 {
-	int serv_sock;
-	int clnt_sock;
-
-	struct sockaddr_in serv_addr;
-	struct sockaddr_in clnt_addr;
-	socklen_t clnt_addr_size;
-
-	char message[] = "Hello World";
-
 	if (argc != 2)
 	{
 		printf("Usage ：%s <port>\n", argv[0]);
 		exit(1);
 	}
 
-	serv_sock = socket(PF_INET, SOCK_STREAM, 0);    //IPv4协议族中面向连接的套接字，目前只有IPPROTO_TCP,所以可以填0（或者IPPROTO_TCP）
+	int serv_sock = socket(PF_INET, SOCK_STREAM, 0);    //IPv4协议族中面向连接的套接字，目前只有IPPROTO_TCP,所以可以填0（或者IPPROTO_TCP）
 	if (serv_sock == -1)
 		error_handling("socket() error");
 
+	struct sockaddr_in serv_addr;
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(atoi(argv[1]));
@@ -42,11 +34,13 @@ int main(int argc, char *argv[])
 	if (listen(serv_sock, 5) == -1)
 		error_handling("listen() error");
 
-	clnt_addr_size = sizeof(clnt_addr);
-	clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_addr, &clnt_addr_size);
+	struct sockaddr_in clnt_addr;
+	socklen_t clnt_addr_size = sizeof(clnt_addr);
+	int clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_addr, &clnt_addr_size);
 	if (clnt_sock == -1)
 		error_handling("accept() error");
 
+	char message[] = "Hello World";
 	write(clnt_sock, message, sizeof(message));
 	close(clnt_sock);
 	close(serv_sock);

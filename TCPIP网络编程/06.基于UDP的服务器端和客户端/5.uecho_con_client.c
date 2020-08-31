@@ -25,22 +25,17 @@ void error_handling(char *message);
 
 int main(int argc, char *argv[])
 {
-    int sock;
-    char message[BUF_SIZE];
-    int str_len;
-    //socklen_t adr_sz;             //不需要了
-
-    struct sockaddr_in serv_adr /*from_adr*/;    //不再需要from_adr
     if (argc != 3)
     {
         printf("Usage : %s <IP> <port>\n", argv[0]);
         exit(1);
     }
 
-    sock = socket(PF_INET, SOCK_DGRAM, 0);
+    int sock = socket(PF_INET, SOCK_DGRAM, 0);
     if (sock == -1)
         error_handling("socket() error");
 
+    struct sockaddr_in serv_adr;
     memset(&serv_adr, 0, sizeof(serv_adr));
     serv_adr.sin_family = AF_INET;
     serv_adr.sin_port = htons(atoi(argv[2]));
@@ -48,6 +43,10 @@ int main(int argc, char *argv[])
 
     connect(sock, (struct sockaddr*)&serv_adr, sizeof(serv_adr));   //创建过程和TCP套接字创建过程一致，除了socket参数2是SOCK_DGRAM,针对UDP套接字调用connect函数并不意味着要与对方UDP套接字连接，这只是向UDP套接字注册目标IP和端口信息
                                                                     //之后就与TCP套接字一样，可以调用sendto,recvfrom传输数据，因为已经指定了收发对象，所以也可以使用write,read函数进行通信
+    char message[BUF_SIZE];
+    int str_len;
+    /*struct sockaddr_in *from_adr*/;    //不再需要from_adr
+    //socklen_t adr_sz;                 //不需要了
     while (1)
     {
         fputs("Insert message(q to quit): ", stdout);

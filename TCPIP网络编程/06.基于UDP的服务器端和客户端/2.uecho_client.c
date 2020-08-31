@@ -13,27 +13,26 @@ void error_handling(char *message);
 
 int main(int argc, char *argv[])
 {
-    int sock;
-    char message[BUF_SIZE];
-    int str_len;
-    socklen_t adr_sz;
-
-    struct sockaddr_in serv_adr, from_adr;
     if (argc != 3)
     {
         printf("Usage : %s <IP> <port>\n", argv[0]);
         exit(1);
     }
 
-    sock = socket(PF_INET, SOCK_DGRAM, 0);
+    int sock = socket(PF_INET, SOCK_DGRAM, 0);
     if (sock == -1)
         error_handling("socket() error");
 
+    struct sockaddr_in serv_adr;
     memset(&serv_adr, 0, sizeof(serv_adr));
     serv_adr.sin_family = AF_INET;
     serv_adr.sin_port = htons(atoi(argv[2]));
     serv_adr.sin_addr.s_addr = inet_addr(argv[1]);
 
+    char message[BUF_SIZE];
+    int str_len;
+    struct sockaddr_in from_adr;
+    socklen_t adr_sz;
     while (1)
     {
         fputs("Insert message(q to quit): ", stdout);

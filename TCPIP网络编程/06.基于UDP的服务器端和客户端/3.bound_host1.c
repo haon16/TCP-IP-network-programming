@@ -13,22 +13,17 @@ void error_handling(char *message);
 
 int main(int argc, char *argv[])
 {
-    int sock;
-    char message[BUF_SIZE];
-    struct sockaddr_in my_adr, your_adr;
-    socklen_t adr_sz;
-    int str_len, i;
-
     if (argc != 2)
     {
         printf("Usage : %s <port>\n", argv[0]);
         exit(1);
     }
 
-    sock = socket(PF_INET, SOCK_DGRAM, 0);
+    int sock = socket(PF_INET, SOCK_DGRAM, 0);
     if (sock == -1)
         error_handling("socket() error");
 
+    struct sockaddr_in my_adr;
     memset(&my_adr, 0, sizeof(my_adr));
     my_adr.sin_family = AF_INET;
     my_adr.sin_port = htons(atoi(argv[1]));
@@ -37,7 +32,11 @@ int main(int argc, char *argv[])
     if (bind(sock, (struct sockaddr*)&my_adr, sizeof(my_adr)) == -1)
         error_handling("bind() error");
     
-    for (i = 0; i < 3; i++)
+    char message[BUF_SIZE];
+    int str_len;
+    struct sockaddr_in your_adr;
+    socklen_t adr_sz;
+    for (int i = 0; i < 3; i++)
     {
         sleep(5);
         adr_sz = sizeof(your_adr);                                                                  //recvfrom是阻塞的，如果没有收到消息会程序会阻塞，直到有消息过来

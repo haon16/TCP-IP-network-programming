@@ -11,14 +11,12 @@ void error_handling(char *message);
 
 int main()
 {
-    int fd;
-    char buf[BUF_SIZE];
-
-    fd = open("data.txt", O_RDONLY);
+    int fd = open("data.txt", O_RDONLY);
     if (fd == -1)
         error_handling("open() error!");
     printf("file description : %d \n", fd);
 
+    char buf[BUF_SIZE];
     if (read(fd, buf, sizeof(buf)) == -1)
         error_handling("read() error!");
     printf("file data : %s", buf);

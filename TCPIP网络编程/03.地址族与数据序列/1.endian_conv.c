@@ -7,12 +7,10 @@
 int main(int argc, char *argv[])
 {
     unsigned short host_port = 0x1234;     //若运行程序的CPU不同，则保存的字节序也不同
-    unsigned short net_port;
     unsigned long host_addr = 0x12345678;
-    unsigned long net_addr;
 
-    net_port = htons(host_port);          //网络字节序是大端序，如果运行环境是小端序CPU,保存的字节序有所改变(Intel和AMD系列的CPU都采用小端序标准)
-    net_addr = htonl(host_addr);
+    unsigned short net_port = htons(host_port);          //网络字节序是大端序，如果运行环境是小端序CPU,保存的字节序有所改变(Intel和AMD系列的CPU都采用小端序标准)
+    unsigned long net_addr = htonl(host_addr);
 
     printf("Host ordered port: %#x \n", host_port);
     printf("Network ordered port: %#x \n", net_port);

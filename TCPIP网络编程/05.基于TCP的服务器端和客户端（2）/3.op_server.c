@@ -14,23 +14,17 @@ int calculate(int opnum, int opnds[], char operator);
 
 int main(int argc, char *argv[])
 {
-    int serv_sock, clnt_sock;
-    char opinfo[BUF_SIZE];
-    int result, opnd_cnt, i;
-    int recv_cnt, recv_len;
-    struct sockaddr_in serv_adr, clnt_adr;
-    socklen_t clnt_adr_sz;
-
     if (argc != 2)
     {
         printf("Usage : %s <port>\n", argv[0]);
         exit(1);
     }
 
-    serv_sock = socket(PF_INET, SOCK_STREAM, 0);
+    int serv_sock = socket(PF_INET, SOCK_STREAM, 0);
     if (serv_sock == -1)
         error_handling("socket() error");
 
+    struct sockaddr_in serv_adr;
     memset(&serv_adr, 0, sizeof(serv_adr));
     serv_adr.sin_family = AF_INET;
     serv_adr.sin_port = htons(atoi(argv[1]));
@@ -42,12 +36,15 @@ int main(int argc, char *argv[])
     if (listen(serv_sock, 5) == -1)
         error_handling("listen() error");
 
-    
-    clnt_adr_sz = sizeof(clnt_adr);
+    struct sockaddr_in clnt_adr;
+    socklen_t clnt_adr_sz = sizeof(clnt_adr);
+    char opinfo[BUF_SIZE];
+    int result, opnd_cnt, i;
+    int recv_cnt, recv_len;
     for (i = 0; i < 5; i++)
     {
         opnd_cnt = 0;
-        clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_adr, &clnt_adr_sz);
+        int clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_adr, &clnt_adr_sz);
         read(clnt_sock, &opnd_cnt, 1);
     
         recv_len = 0;
