@@ -1,6 +1,54 @@
 //时间：2019年8月13日20:23:23
 //完成端口
 
+/*
+完成端口也是windows的一种机制   在重叠IO模型基础上的优化
+
+
+重叠IO存在问题     1.事件通知   （1）无序
+								（2）循环询问  延迟高，做了很多无用功
+								（3）采用多线程 管理很难合理 数量太多
+
+				   2.完成例程   （1）线程数量太多  每个客户端都有一个线程去调用回调函数
+
+				   3.线程过多   （1）切换线程消耗大量CPU资源/时间
+								（2）为什么			CPU单核中多线程执行状况	1）在一个时间片周期内，每个线程执行一样的时间
+																			2）假设一个时间片周期是1ms，有100个线程在单核上运行，那么这些线程一个时间周期内分得0.01ms执行时间，时间到，不管执行到什么位置，
+																				立即切换下一个线程执行，如此，这些线程就在不停的切换中执行，由于速度太快，咱们人分辨不出来，所以就展现出同时运行的效果      大家电脑开太多软件会卡，这就是其中一个原因  单核是伪多线程 骗人的
+													所以同一个应用程序，在单核中执行多个线程，理论上还是单线程的执行效率，假设一条线程执行需要1s，那么10个线程，总共执行完需要10s，单核上运行10条，还要加上线程切换的时间，所以大于10s
+													多核中多线程的执行状况  1）多个核的线程，达到了真正的同时运行
+																			2）所以假设一台电脑是8核CPU，那么一个程序创建8条线程，操作系统会自动把8条线程分给8个核，从而达到了最高的效率
+													正常情况下，电脑运行着很多的软件，有几千个线程同时运行    系统首先是以软件为单位进行线程分配执行的
+				  4.最优线程数是多少？  （1）理论上跟CPU核数一样是最好的
+										（2）到底是几个   1）网上有几种答案   CPU核数  CPU核数*2  CPU核数*2+2
+														  2）CPU有个重要参数就是n核m线程    比如i7 700K   4核8线程  4核指物理四核，也就是CPU真实核数    理论上最佳的线程数是4个，但是因特尔在此使用了超线程技术，使得物理单核可以模拟出双核的性能，核数是8的来历，所以在应用中跟8核没啥两样   这应该就是CPU核数*2的来历
+																							    i7 9700K  8核8线程  这个就是没有使用超线程技术，单核单线程   所以线程数=CPU核数
+										（3）CPU核数*2+2  这个数量，是根据实际应用中的经验得来  线程函数中可能会调用Sleep(),WSAWaitForMultipleEvents()这类函数，会使线程挂起（不占CPU时间片），从而使得CPU某个核空闲了，这就不好了，所以一般多建个两三根，以解决此类情况，让CPU不停歇，从而在整体上保证程序的执行效率
+										（4）引申理解     1）某一个程序在CPU一个周期分的时间越多（创建的线程更多），那就越快    其他线程分的时间就越少了
+														  2）考虑切换时间   数量就会有个瓶颈    系统性能分析工具
+														  3）根据出发点不同创建对应数量的线程
+完成端口		1.模仿消息队列，创造一个通知队列，系统创建   保证有序，不做无用功
+				2.创建最佳数量的线程   充分利用CPU的性能
+
+
+代码逻辑	 原理：	1.将重叠套接字（客户端+服务器）与一个完成端口（一个类型的变量）绑定在一起
+					2.使用AcceptEx, WSARecv, WSASend投递请求
+					3.当系统异步完成请求，就会把通知存进一个队列，我们就叫他通知队列，该队列由操作系统创建，维护
+					4.完成端口可以理解为这个队列的头，我们通过GetQueueCompletionStatus从队列头往外拿，一个一个处理
+
+			 代码：	1.创建完成端口  CreateIoCompletionPort
+					2.将完成端口与socket绑定   CreateIoCompletionPort
+					3.创建指定数目的线程   （1）CPU核数一样   CreateThread
+										   （2）线程内部   1）GetQueueCompletionStatus  2）分类处理
+					4.使用AcceptEx, WSARecv, WSASend投递请求
+					5.主线程阻塞 （不阻塞的话程序就执行完了，软件就关闭了）
+
+*/
+
+
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,7 +72,7 @@ int nProcessorsCount;
 //接收缓冲区
 char g_strrecv[1500] = {0};
 
-int PostAccept(void);    //加void表示不接受参数， 如果为空，表示参数个数不确定
+int PostAccept(void);    //C语言加void表示不接受参数， 如果为空，表示参数个数不确定
 int PostRecv(int index);
 int PostSend(int index);
 void Clear(void)
@@ -52,7 +100,7 @@ BOOL WINAPI fun(DWORD dwCtrlType)
 		CloseHandle(hPort);
 		Clear();
 
-		g_flag = FALSE;
+		g_flag = FALSE;    //控制台点×退出时关闭子线程
 
 		//释放线程句柄
 		for (int i = 0; i < nProcessorsCount; i++)
@@ -109,26 +157,31 @@ int main()
 
 	
 /*
-功能：1.创建一个完成端口    2.将完成端口与SOCKET绑定再一起
-参数1：1.创建完成端口    INVALID_HANDLE_VALUE  (1)此时参数2为NULL
-											  (2)参数3忽略  填个0
-	  2.绑定的话   服务器socket
-参数2：1.创建完成端口    NULL
-	  2.绑定的话    完成端口变量
-参数3：1.创建完成端口   0
-	  2.绑定的话    （1）再次传递socketServer    也可以传递一个下标，做编号
-					（2）与系统接收到的对应的数据关联在一起
-参数4：1.创建完成端口   （1）允许此端口上最多同时运行的线程数量
-					   （2）填CPU的核数即可    咱们自己获取    GetSystemInfo
-					   (3)可填写0   表示默认是CPU核数
-	  2.绑定的话     （1）忽略此参数，填0就行了
-					（2）当说忽略的时候，我们填啥都是没有作用的，我们一般填0
-返回值：1.成功  （1）当参数2为NULL,   返回一个新的完成端口
-				（2）当参数2不为NULL    返回自己
-				（3）当参数1为socket    返回与socket绑定后的端口
-	   2.失败返回0    (1)GetLastError()
-					 (2)完成端口也是windows的一种机制      不是网络专属，文件操作均可以
+	功能：1.创建一个完成端口    2.将完成端口与SOCKET绑定再一起
+	参数1：	1.创建完成端口    INVALID_HANDLE_VALUE	(1)此时参数2为NULL
+													(2)参数3忽略  填个0
+			2.绑定的话   服务器socket
+	参数2：1.创建完成端口    NULL
+		  2.绑定的话    完成端口变量
+	参数3：1.创建完成端口   0
+		  2.绑定的话    （1）再次传递socketServer    也可以传递一个下标，做编号
+						（2）与系统接收到的对应的数据关联在一起
+	参数4：1.创建完成端口   （1）允许此端口上最多同时运行的线程数量
+						   （2）填CPU的核数即可    咱们自己获取    GetSystemInfo
+						   (3)可填写0   表示默认是CPU核数
+		  2.绑定的话     （1）忽略此参数，填0就行了
+						（2）当说忽略的时候，我们填啥都是没有作用的，我们一般填0
+	返回值：1.成功  （1）当参数2为NULL,   返回一个新的完成端口
+					（2）当参数2不为NULL    返回自己
+					（3）当参数1为socket    返回与socket绑定后的端口
+		   2.失败返回0    (1)GetLastError()
+						 (2)完成端口也是windows的一种机制      不是网络专属，文件操作均可以
 */
+
+	g_allsockets[g_count] = socketServer;
+	g_allOlp[g_count].hEvent = WSACreateEvent();
+	g_count++;
+
 	//创建完成端口
 	hPort =  CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
 	if (0 == hPort)
@@ -139,10 +192,6 @@ int main()
 		WSACleanup();
 		return -1;
 	}
-
-	g_allsockets[g_count] = socketServer;
-	g_allOlp[g_count].hEvent = WSACreateEvent();
-	g_count++;
 
 	//绑定
 	HANDLE hPort1 = CreateIoCompletionPort((HANDLE)socketServer, hPort, 0, 0);
@@ -212,9 +261,9 @@ int main()
 	}
 
 	//阻塞
-	while (g_flag)
+	while (1)
 	{
-		Sleep(1000);    //主线程挂起1s，腾出1S给CPU,处理其他线程，对CPU友好
+		Sleep(1000);    //主线程挂起1s，不占用CPU执行周期，腾出1S给CPU,处理其他线程，对CPU友好
 	}
 
 	//释放线程句柄
@@ -235,24 +284,24 @@ int main()
 DWORD WINAPI ThreadProc(LPVOID lpPrameter)
 {
 /*
-无通知时，线程挂起，不占用CPU的时间，非常棒
-功能：尝试从指定的I/O完成端口取I/O完成数据包
-参数1：完成端口    咱们要从主函数传进来
-参数2：接收或者发送的字节数
-参数3：完成端口函数参数3传进来的
-参数4：重叠结构
-参数5：1.等待时间    当没有客户端响应时候，通知队列里什么都没有，咱们这里也get不到什么东西，那么等一会还是一直等
-	  2.INFINITE    一直等，闲着也是闲着
-返回值：1.成功返回TRUE
-       2.失败返回FALSE   GetLastError
-	                    continue
+	无通知时，线程挂起，不占用CPU的时间，非常棒
+	功能：尝试从指定的I/O完成端口取I/O完成数据包
+	参数1：完成端口    咱们要从主函数传进来
+	参数2：接收或者发送的字节数
+	参数3：完成端口函数参数3传进来的
+	参数4：重叠结构
+	参数5：	1.等待时间    当没有客户端响应时候，通知队列里什么都没有，咱们这里也get不到什么东西，那么等一会还是一直等
+			2.INFINITE    一直等，闲着也是闲着
+	返回值：1.成功返回TRUE
+	2.失败返回FALSE   GetLastError
+	continue
 */
 	HANDLE port = (HANDLE)lpPrameter;
 	DWORD NumberOfBytes;
 	ULONG_PTR index;
 	LPOVERLAPPED lpOverlapped;
 
-	while (1)
+	while (g_flag)
 	{
 		BOOL bFlag = GetQueuedCompletionStatus(port, &NumberOfBytes, &index, &lpOverlapped, INFINITE);
 		if (FALSE == bFlag)
@@ -296,7 +345,7 @@ DWORD WINAPI ThreadProc(LPVOID lpPrameter)
 				closesocket(g_allsockets[index]);
 				WSACloseEvent(g_allOlp[index].hEvent);
 
-				g_allsockets[index] = 0;
+				g_allsockets[index] = 0;       //socket跟下标绑定了，不能直接把最后一个socket赋值过来，给个特殊值0，之后释放0就别释放了
 				g_allOlp[index].hEvent = NULL;
 			}
 			else
@@ -331,6 +380,7 @@ int PostAccept()
 	DWORD recv_count;
 	BOOL bFlag = AcceptEx(g_allsockets[0], g_allsockets[g_count], str, 0, sizeof(struct sockaddr_in) + 16, sizeof(struct sockaddr_in) + 16, &recv_count, &g_allOlp[0]);
 	
+	//完成端口不需要区分立即完成还是异步完成，只要完成就会产生通知，通知就会装进通知队列，线程就能取出通知
 	//if (TRUE == bFlag)
 	//{
 	//	HANDLE hPort1 = CreateIoCompletionPort((HANDLE)g_allsockets[g_count], hPort, g_count, 0);
@@ -379,6 +429,8 @@ int PostRecv(int index)
 	DWORD read_count;
 	DWORD flag = 0;
 	int nRes = WSARecv(g_allsockets[index], &wsabuf, 1, &read_count, &flag, &g_allOlp[index], NULL);
+
+	//完成端口不需要区分立即完成还是异步完成，只要完成就会产生通知，通知就会装进通知队列，线程就能取出通知
 	/*if (0 == nRes)
 	{
 		printf("%s\n", g_strrecv);
