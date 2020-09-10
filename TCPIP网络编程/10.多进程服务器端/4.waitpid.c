@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
             pid     : 等待终止的目标子进程ID，若传递-1，则与wait函数相同，可以等待任意子进程终止
             statloc : 与wait函数的statloc参数具有相同含义
             options : 传递头文件sys/wait.h中声明的常量WNOHANG,即使没有终止的子进程也不会进入阻塞状态，而是返回0并退出函数
+            返回值  : 成功时返回终止的子进程ID（或0），失败时返回-1
         */
         while (!waitpid(-1, &status, WNOHANG))    
         {

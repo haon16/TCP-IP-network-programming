@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < 3; i++)
     {
         puts("wait...");         //实际测试没有CTRL+C终止时只输出了2次wait信息，CTRL+C终止时一共输出了3次wait信息，这个没搞明白
-        sleep(100);
+        sleep(100);              //发生信号时将唤醒由于调用sleep函数而进入阻塞状态的进程，一旦被唤醒就不会再进入睡眠状态
     }
 
     return 0;

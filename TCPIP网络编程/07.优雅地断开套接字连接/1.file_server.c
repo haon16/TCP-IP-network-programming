@@ -1,6 +1,6 @@
 //2020年8月31日 10:36:05
 //基于半关闭的文件传输程序
-//Linux下的close函数和Window下的closesocket函数是完全断开，完全断开不仅无法传输数据，而且也不能接受数据，有可能会导致一些必要的数据没有接受到
+//Linux下的close函数和Window下的closesocket函数是完全断开，完全断开不仅无法传输数据，而且也不能接受数据，有可能会导致一些必要的数据没有接收到
 
 #include <stdio.h>
 #include <stdlib.h>

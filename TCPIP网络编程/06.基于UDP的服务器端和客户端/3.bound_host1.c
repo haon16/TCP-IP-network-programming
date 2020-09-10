@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
         sleep(5);
         adr_sz = sizeof(your_adr);                                                                  //recvfrom是阻塞的，如果没有收到消息会程序会阻塞，直到有消息过来
         str_len = recvfrom(sock, message, BUF_SIZE, 0, (struct sockaddr*)&your_adr, &adr_sz);       //recvfrom函数调用间隔为5秒，在调用前bound_host2已经调用了3次sendto函数传输数据，此时数据已经传输到bound_host1.c，
-        printf("Message %d: %s \n", i+1, message);                                                  //如果是TCO程序，此时调用1次输入函数即可读入全部数据，UDP则不同，在这种情况下也需要调用3次recvform函数
+        printf("Message %d: %s \n", i+1, message);                                                  //如果是TCP程序，此时调用1次输入函数即可读入全部数据，UDP则不同，在这种情况下也需要调用3次recvform函数
     }
 
     close(sock);
