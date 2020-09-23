@@ -1,4 +1,5 @@
 //2020年9月16日 20:34:13
+//实现广播数据的Receiver
 
 #include <stdio.h>
 #include <stdlib.h>
