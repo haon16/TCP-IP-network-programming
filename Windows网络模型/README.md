@@ -1,1 +1,1 @@
-# window下的网络编程可翻阅《TCP/IP网络编程》中的windows网络编程部分加以理解
+# 可翻阅《TCP/IP网络编程》中的windows网络编程部分加以理解
