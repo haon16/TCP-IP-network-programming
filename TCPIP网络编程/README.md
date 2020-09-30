@@ -1,7 +1,4 @@
-# network
-
-主要是linux系统下的代码
-
+# linux系统下的网络编程部分
 tips：
 1. command &  后台运行
 2. ctrl -z    暂停当前任务并存入后台
