@@ -79,3 +79,6 @@ void error_handling(char *message)
     fputc('\n', stderr);
     exit(1);
 }
+
+
+//无论复制出多少文件描述符，均应调用shutdown函数发送EOF并进入半关闭状态
