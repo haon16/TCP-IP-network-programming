@@ -5,7 +5,7 @@
 ssize_t send(int sockfd, const void *buf, size_t nbytes, int flags);
 ssize_t recv(int sockfd, const void *buf, size_t nbytes, int flags);
 
-flags：首发数据时的可选项，可利用位或同事传递多个信息
+flags：首发数据时的可选项，可利用位或同时传递多个信息
 MSG_OOB:用于传输带外数据
 */
 

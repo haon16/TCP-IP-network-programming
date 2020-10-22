@@ -31,7 +31,7 @@ void* thread_summation(void *arg)
 
     while (start <= end)
     {
-        sum += start;           //2个线程共享保存全局变量的数据区
+        sum += start;           //2个线程都可直接访问全局变量sum，原因在于2个线程共享保存全局变量的数据区
         start++;
     }
     return NULL;

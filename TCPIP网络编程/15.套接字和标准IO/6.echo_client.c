@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
         fputs(message, writefp);
         fflush(writefp);
-        fgets(message, BUF_SIZE, readfp);                       //第4张的回声客户端需要将接受的数据转换为字符串（数据的尾部插入0）
+        fgets(message, BUF_SIZE, readfp);                       //第4章的回声客户端需要将接受的数据转换为字符串（数据的尾部插入0）
         printf("Message from server: %s", message);             //这边不需要，因为使用标准I/O函数后可以按字符串单位进行数据交换
     }
 

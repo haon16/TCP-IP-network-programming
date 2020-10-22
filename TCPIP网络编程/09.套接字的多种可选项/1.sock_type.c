@@ -16,7 +16,7 @@ optname 要查看的可选项名
 optval  保存查看结果的缓冲地址值
 optlen  向第四个参数optval传递的缓冲大小。调用函数后，该变量中保存通过第四个参数返回的可选项信息的字节数
 
-int setsockopt (int sock, int level, int optname, const void *optval, socklen_t optlen)
+int setsockopt (int sock, int level, int optname, const void *optval, socklen_t *optlen)
 大致跟getsockopt参数意义一样
 */
 

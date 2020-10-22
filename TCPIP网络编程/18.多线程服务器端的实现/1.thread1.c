@@ -58,4 +58,4 @@ void* thread_main(void *arg)
 }
 
 
-//43行的sleep函数改成2s的话，运行后不会输出5次"running thread"，因为main函数返回后整个进程将被销毁
+//44行的sleep函数改成2s的话，运行后不会输出5次"running thread"，因为main函数返回后整个进程将被销毁

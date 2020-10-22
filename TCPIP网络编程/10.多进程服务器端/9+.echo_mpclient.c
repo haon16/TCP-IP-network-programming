@@ -66,7 +66,7 @@ void write_routine(int sock, char *buf)
         fgets(buf, BUF_SIZE, stdin);
         if (!strcmp(buf, "q\n") || !strcmp(buf, "Q\n"))
         {
-            shutdown(sock, SHUT_WR);            //调用shutdown函数向服务器端传递EOF（发送FIN）。虽说41行的close函数也能传递EOF，但是fork之后复制了文件描述符，此时无法通过1次close函数调用传递EOF，因此需要通过shutdown函数调用另外传递。
+            shutdown(sock, SHUT_WR);            //调用shutdown函数向服务器端传递EOF（发送FIN）。虽说45行的close函数也能传递EOF，但是fork之后复制了文件描述符，此时无法通过1次close函数调用传递EOF，因此需要通过shutdown函数调用另外传递。
             return;                             //只有在调用close使得相应描述符引用计数为0时，才会传递EOF，而采用shutdown，则使描述符的引用计数仍然大于0但EOF也被强迫发送
         }
         write(sock, buf, strlen(buf));

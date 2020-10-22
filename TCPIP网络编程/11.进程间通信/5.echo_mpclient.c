@@ -1,5 +1,5 @@
-//2020年9月12日 18:20:48
-//回声客户端的I/O程序分割   同第10章，此处用于测试
+//2020年9月11日 10:41:26
+//回声客户端的I/O程序分割   同第10章，不做修改
 
 //分隔前：客户端每次向服务器传输数据后，都得等待服务器回复，直到接受完服务器端的回声数据后，才能传输下一批数据
 //分隔后：不同进程分别负责输入和输出，这样无论客户端是否从服务器端接受完数据都可以进行传输
@@ -66,7 +66,7 @@ void write_routine(int sock, char *buf)
         fgets(buf, BUF_SIZE, stdin);
         if (!strcmp(buf, "q\n") || !strcmp(buf, "Q\n"))
         {
-            shutdown(sock, SHUT_WR);            //调用shutdown函数向服务器端传递EOF（发送FIN）。虽说41行的close函数也能传递EOF，但是fork之后复制了文件描述符，此时无法通过1次close函数调用传递EOF，因此需要通过shutdown函数调用另外传递。
+            shutdown(sock, SHUT_WR);            //调用shutdown函数向服务器端传递EOF（发送FIN）。虽说45行的close函数也能传递EOF，但是fork之后复制了文件描述符，此时无法通过1次close函数调用传递EOF，因此需要通过shutdown函数调用另外传递。
             return;                             //只有在调用close使得相应描述符引用计数为0时，才会传递EOF，而采用shutdown，则使描述符的引用计数仍然大于0但EOF也被强迫发送
         }
         write(sock, buf, strlen(buf));
@@ -79,3 +79,6 @@ void error_handling(char *message)
     fputc('\n', stderr);
     exit(1);
 }
+
+
+//无论复制出多少文件描述符，均应调用shutdown函数发送EOF并进入半关闭状态
