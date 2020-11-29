@@ -31,11 +31,11 @@ void* thread_summation(void *arg)
 
     while (start <= end)
     {
-        sum += start;
+        sum += start;           //2个线程共享保存全局变量的数据区
         start++;
     }
     return NULL;
 }
 
 
-//结果为55，是正确的。2个线程共享保存全局变量的数据区
+//运行结果为55，虽然正确的，但示例本身存在问题，此处存在临界区相关问题
