@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
     printf("server socket: %d\n", serv_sock);
 
-    //epoll_ctl(A, EPOLL_CTL_ADD, B, C) : epoll历程A中注册文件描述符B,主要目的是监视参数C中的事件
+    //epoll_ctl(A, EPOLL_CTL_ADD, B, C) : epoll例程A中注册文件描述符B,主要目的是监视参数C中的事件
 
     int epfd = epoll_create(EPOLL_SIZE);                        //epoll方式下由操作系统负责保存监视对象文件描述符，需要向操作系统请求创建保存epoll文件描述符的空间   （select方式中是直接声明fd_set变量）
     struct epoll_event event;

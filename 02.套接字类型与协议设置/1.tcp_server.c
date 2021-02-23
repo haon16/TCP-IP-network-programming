@@ -50,6 +50,6 @@ int main(int argc, char *argv[])
 void error_handling(char *message)
 {
 	fputs(message, stderr);       //puts() 只能向标准输出流输出，而 fputs() 可以向任何流输出。
-	fputc("\n", stderr);          //使用 puts() 时，系统会在自动在其后添加换行符；而使用 fputs() 时，系统不会自动添加换行符。
+	fputc('\n', stderr);          //使用 puts() 时，系统会在自动在其后添加换行符；而使用 fputs() 时，系统不会自动添加换行符。
 	exit(1);
 }
