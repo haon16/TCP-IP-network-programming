@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    FILE *fp = fopen("1.file_server.c", "rb");            //open 是系统调用 返回的是文件句柄，文件的句柄是文件在文件描述副表里的索引，fopen是C的库函数，返回的是一个指向文件结构的指针。 
+    FILE *fp = fopen("1.file_server.c", "rb");            //open 是系统调用 返回的是文件句柄，文件的句柄是文件在文件描述符表里的索引，fopen是C的库函数，返回的是一个指向文件结构的指针。 
     if (fp == NULL)
         error_handling("fopen() error");
 
